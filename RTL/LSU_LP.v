@@ -108,13 +108,13 @@ module LSU_LP
 	assign LDM0_ena_wr 		= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? AXI_LDM_ena_in:
 							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? PE1_LDM_ena_in:
 							  (CTRL_LDM_ena_in & (CTRL_LDM_addra_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? CTRL_LDM_ena_in: 0;
-	assign LDM0_wea_wr 		= (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0) ? AXI_LDM_wea_in:
-							  (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0) ? PE1_LDM_wea_in: 0;
+	assign LDM0_wea_wr 		= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? AXI_LDM_wea_in:
+							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? PE1_LDM_wea_in: 0;
 	assign LDM0_addra_wr 	= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? AXI_LDM_addra_in[`LDM_ADDR_BITS-1:0]:
 							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? PE1_LDM_addra_in[`LDM_ADDR_BITS-1:0]:
 							  (CTRL_LDM_ena_in & (CTRL_LDM_addra_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? CTRL_LDM_addra_in[`LDM_ADDR_BITS-1:0]: 0;
-	assign LDM0_dina_wr 	= (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0) ? AXI_LDM_dina_in:
-							  (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0) ? PE1_LDM_dina_in: 0;
+	assign LDM0_dina_wr 	= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? AXI_LDM_dina_in:
+							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? PE1_LDM_dina_in: 0;
 
 	assign LDM0_enb_wr 		= (ALU_LDM_enb_in & (ALU_LDM_addrb_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? ALU_LDM_enb_in:
 							  (CTRL_LDM_enb_in & (CTRL_LDM_addrb_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==0)) ? CTRL_LDM_enb_in: 0;
@@ -127,13 +127,13 @@ module LSU_LP
 	assign LDM1_ena_wr 		= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? AXI_LDM_ena_in:
 							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? PE1_LDM_ena_in:
 							  (CTRL_LDM_ena_in & (CTRL_LDM_addra_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? CTRL_LDM_ena_in: 0;
-	assign LDM1_wea_wr 		= (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1) ? AXI_LDM_wea_in : 
-							  (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1) ? PE1_LDM_wea_in: 0;
+	assign LDM1_wea_wr 		= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? AXI_LDM_wea_in : 
+							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? PE1_LDM_wea_in: 0;
 	assign LDM1_addra_wr 	= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? AXI_LDM_addra_in[`LDM_ADDR_BITS-1:0]:
 							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? PE1_LDM_addra_in[`LDM_ADDR_BITS-1:0]:
 							  (CTRL_LDM_ena_in & (CTRL_LDM_addra_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? CTRL_LDM_addra_in[`LDM_ADDR_BITS-1:0]: 0;
-	assign LDM1_dina_wr 	= (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS] == 1) ? AXI_LDM_dina_in: 
-							  (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1) ? PE1_LDM_dina_in: 0;
+	assign LDM1_dina_wr 	= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS] == 1)) ? AXI_LDM_dina_in: 
+							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? PE1_LDM_dina_in: 0;
 
 	assign LDM1_enb_wr 		= (ALU_LDM_enb_in & (ALU_LDM_addrb_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? ALU_LDM_enb_in:
 							  (CTRL_LDM_enb_in & (CTRL_LDM_addrb_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==1)) ? CTRL_LDM_enb_in: 0;
@@ -146,11 +146,13 @@ module LSU_LP
 	assign LDM2_ena_wr 		= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? AXI_LDM_ena_in:
 							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? PE1_LDM_ena_in:
 							  (CTRL_LDM_ena_in & (CTRL_LDM_addra_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? CTRL_LDM_ena_in: 0;
-	assign LDM2_wea_wr 		= (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2) ? PE1_LDM_wea_in: 0;
+	assign LDM2_wea_wr 		= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? AXI_LDM_wea_in:
+							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? PE1_LDM_wea_in: 0;
 	assign LDM2_addra_wr 	= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? AXI_LDM_addra_in[`LDM_ADDR_BITS-1:0]:
 							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? PE1_LDM_addra_in[`LDM_ADDR_BITS-1:0]:
 							  (CTRL_LDM_ena_in & (CTRL_LDM_addra_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? CTRL_LDM_addra_in[`LDM_ADDR_BITS-1:0]: 0;
-	assign LDM2_dina_wr 	= (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2) ? PE1_LDM_dina_in: 0;
+	assign LDM2_dina_wr 	= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? AXI_LDM_dina_in:
+							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? PE1_LDM_dina_in: 0;
 
 	assign LDM2_enb_wr 		= (ALU_LDM_enb_in & (ALU_LDM_addrb_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? ALU_LDM_enb_in:
 							  (CTRL_LDM_enb_in & (CTRL_LDM_addrb_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==2)) ? CTRL_LDM_enb_in: 0;
@@ -163,11 +165,13 @@ module LSU_LP
 	assign LDM3_ena_wr 		= (CFG_in == `EXE_ADD) ? CTRL_LDM_ena_in: (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? AXI_LDM_ena_in:
 							 (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? PE1_LDM_ena_in:
 							 (CTRL_LDM_ena_in & (CTRL_LDM_addra_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? CTRL_LDM_ena_in : 0;
-	assign LDM3_wea_wr 		= (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3) ? PE1_LDM_wea_in: 0;
+	assign LDM3_wea_wr 		= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? AXI_LDM_wea_in:
+							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? PE1_LDM_wea_in: 0;
 	assign LDM3_addra_wr 	= (CFG_in == `EXE_ADD) ? CTRL_LDM_addra_in: (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? AXI_LDM_addra_in[`LDM_ADDR_BITS-1:0]:
 						     (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? PE1_LDM_addra_in[`LDM_ADDR_BITS-1:0]:
 						     (CTRL_LDM_ena_in & (CTRL_LDM_addra_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? CTRL_LDM_addra_in[`LDM_ADDR_BITS-1:0] : 0;
-	assign LDM3_dina_wr 	= (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3) ? PE1_LDM_dina_in: 0;
+	assign LDM3_dina_wr 	= (AXI_LDM_ena_in & (AXI_LDM_addra_in[`LDM_NUM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? AXI_LDM_dina_in:
+							  (PE1_LDM_ena_in & (PE1_LDM_addra_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? PE1_LDM_dina_in: 0;
 	assign LDM3_enb_wr 		= (ALU_LDM_enb_in & (ALU_LDM_addrb_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? ALU_LDM_enb_in:
 							  (CTRL_LDM_enb_in & (CTRL_LDM_addrb_in[`S_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? CTRL_LDM_enb_in: 0;
 	assign LDM3_web_wr 		= (ALU_LDM_enb_in & (ALU_LDM_addrb_in[`D_LDM_BITS+`LDM_ADDR_BITS-1:`LDM_ADDR_BITS]==3)) ? ALU_LDM_web_in: 0;

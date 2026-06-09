@@ -1,0 +1,5 @@
+time,pe,target_ctx_word,target_bank,target_tail_addr,shared_pix,shared_valid,weight1,bias1,bias_valid,alu_out,alu_valid,alu_en,alu_addr
+70885000,36,00ce2880,2,7,0027,1,ffde,0000,0,0139,1,1,87
+70885000,37,00ce2880,2,7,0028,1,ffde,0000,0,016c,1,1,87
+70885000,38,00ce2880,2,7,0028,1,ffde,0000,0,01bb,1,1,87
+70885000,39,00ce2880,2,7,0029,1,ffde,0000,0,0188,1,1,87

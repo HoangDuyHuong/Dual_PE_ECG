@@ -33,7 +33,7 @@ typedef uint32_t U32;
 // Global FPGA info structure
 volatile struct {
     U64  reg_phys;        // Physical base address for register
-    U32  *pio_32_mmap;    // Mapped virtual address to access registers
+    U32  *reg_mmap;    // Mapped virtual address to access registers
 } MY_IP_info;
 
 // Helper: Filter out hidden files (starting with '.')
@@ -93,8 +93,8 @@ int fpga_open() {
             printf("Opened device: %s (%s)", path, UIO_MY_IP);
 
             MY_IP_info.reg_phys = MY_IP_BASE_PHYS;
-            MY_IP_info.pio_32_mmap = (U32*)mmap(NULL, REG_MMAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd_reg, 0);
-            if (MY_IP_info.pio_32_mmap == MAP_FAILED) {
+            MY_IP_info.reg_mmap = (U32*)mmap(NULL, REG_MMAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd_reg, 0);
+            if (MY_IP_info.reg_mmap == MAP_FAILED) {
                 perror("mmap failed");
                 close(fd_reg);
                 free(namelist);

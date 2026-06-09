@@ -1,0 +1,9 @@
+RUN_CTX_COUNT=42
+target_ctx_word=0ec01200
+n=7
+y=3
+alu_cfg=2
+d_ldm=0
+sa_ldm=0
+rows_to_dump=32
+length=1280

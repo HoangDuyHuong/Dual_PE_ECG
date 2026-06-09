@@ -183,7 +183,248 @@ void write_vivado_golden(const char* filename, float data[], int length) {
     fclose(file);
 }
 
+// ========================= DUAL_PE DEBUG/GOLDEN DUMP HELPERS =========================
+// These helpers do not change calculation or CRAM/WRAM/BRAM generation.
+// They only dump golden outputs in formats convenient for Vivado/Core readback debug.
+FILE *golden_manifest_file = fopen("golden_manifest.csv", "w");
+FILE *golden_extra_manifest_file = fopen("golden_extra_manifest.csv", "w");
+
+void write_float_plain(const char* filename, const float* data, int length) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error: Unable to open file %s for writing.\n", filename);
+        return;
+    }
+    for (int i = 0; i < length; i++) {
+        fprintf(file, "%.6f\n", data[i]);
+    }
+    fclose(file);
+}
+
+void write_hex_plain(const char* filename, const float* data, int length) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error: Unable to open file %s for writing.\n", filename);
+        return;
+    }
+    for (int i = 0; i < length; i++) {
+        int fixed_point_value = FX_convert(data[i]);
+        fprintf(file, "%04x\n", fixed_point_value & 0xFFFF);
+    }
+    fclose(file);
+}
+
+// addr40 format matches 40 PE logical mapping: local_addr = i/40, pe_idx = i%40,
+// physical/readback offset = (local_addr << 6) | pe_idx.
+void write_addr40_plain(const char* filename, const float* data, int length) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error: Unable to open file %s for writing.\n", filename);
+        return;
+    }
+    for (int i = 0; i < length; i++) {
+        int fixed_point_value = FX_convert(data[i]);
+        int local_addr = i / 40;
+        int pe_idx = i % 40;
+        int address = (local_addr << 6) | pe_idx;
+        fprintf(file, "%04x_%04x\n", address & 0xFFFF, fixed_point_value & 0xFFFF);
+    }
+    fclose(file);
+}
+
+void write_golden_manifest_header_once() {
+    static int done = 0;
+    if (!done && golden_manifest_file != NULL) {
+        fprintf(golden_manifest_file,
+                "ctx,function,cram_hex,length,pad,n,y,k,j,alu_cfg,stride,s_ldm,d_ldm,sa_ldm,float_file,hex_file,addr40_file,pea0_even_float,pea1_odd_float\n");
+        done = 1;
+    }
+}
+
+void write_golden_extra_manifest_header_once() {
+    static int done = 0;
+    if (!done && golden_extra_manifest_file != NULL) {
+        fprintf(golden_extra_manifest_file,
+                "ctx,function,tag,length,float_file,hex_file,addr40_file\n");
+        done = 1;
+    }
+}
+
+void dump_dual_pea_split_ctx(int ctx,
+                            const char* function_name,
+                            const float* data,
+                            int length,
+                            int n_ctx,
+                            int alu_cfg,
+                            char* pea0_float_file,
+                            int pea0_float_file_len,
+                            char* pea1_float_file,
+                            int pea1_float_file_len) {
+    pea0_float_file[0] = '\0';
+    pea1_float_file[0] = '\0';
+
+    // Only convolution/MAC contexts use Dual_PE pair execution.
+    // In this project, alu_cfg 1 and 5 are MAC/MAC+ReLU style contexts.
+    if (!(alu_cfg == 1 || alu_cfg == 5)) return;
+
+    int pair_count = n_ctx + 1;
+    int channel_count = pair_count * 2;
+    if (pair_count <= 0 || length <= 0 || (length % channel_count) != 0) return;
+
+    int y_len = length / channel_count;
+    int split_len = pair_count * y_len;
+    float* pea0_even = new float[split_len];
+    float* pea1_odd  = new float[split_len];
+
+    for (int p = 0; p < pair_count; p++) {
+        for (int y = 0; y < y_len; y++) {
+            pea0_even[p * y_len + y] = data[(2 * p) * y_len + y];
+            pea1_odd [p * y_len + y] = data[(2 * p + 1) * y_len + y];
+        }
+    }
+
+    char pea0_hex_file[180];
+    char pea1_hex_file[180];
+    char pea0_addr40_file[180];
+    char pea1_addr40_file[180];
+
+    snprintf(pea0_float_file, pea0_float_file_len, "Golden_ctx%02d_%s_PEA0_even_float.txt", ctx, function_name);
+    snprintf(pea1_float_file, pea1_float_file_len, "Golden_ctx%02d_%s_PEA1_odd_float.txt", ctx, function_name);
+    snprintf(pea0_hex_file, sizeof(pea0_hex_file), "Golden_ctx%02d_%s_PEA0_even_hex.txt", ctx, function_name);
+    snprintf(pea1_hex_file, sizeof(pea1_hex_file), "Golden_ctx%02d_%s_PEA1_odd_hex.txt", ctx, function_name);
+    snprintf(pea0_addr40_file, sizeof(pea0_addr40_file), "Golden_ctx%02d_%s_PEA0_even_addr40.txt", ctx, function_name);
+    snprintf(pea1_addr40_file, sizeof(pea1_addr40_file), "Golden_ctx%02d_%s_PEA1_odd_addr40.txt", ctx, function_name);
+
+    write_float_plain(pea0_float_file, pea0_even, split_len);
+    write_float_plain(pea1_float_file, pea1_odd, split_len);
+    write_hex_plain(pea0_hex_file, pea0_even, split_len);
+    write_hex_plain(pea1_hex_file, pea1_odd, split_len);
+    write_addr40_plain(pea0_addr40_file, pea0_even, split_len);
+    write_addr40_plain(pea1_addr40_file, pea1_odd, split_len);
+
+    delete[] pea0_even;
+    delete[] pea1_odd;
+}
+
+void dump_golden_ctx(const char* function_name,
+                     const float* data,
+                     int length,
+                     uint32_t cram_word,
+                     int pad,
+                     int n,
+                     int y,
+                     int k,
+                     int j,
+                     int alu_cfg,
+                     int stride,
+                     int s_ldm,
+                     int d_ldm,
+                     int sa_ldm) {
+    int ctx = ctx_addr;
+    char float_file[160];
+    char hex_file[160];
+    char addr40_file[160];
+    char pea0_float_file[180];
+    char pea1_float_file[180];
+
+    snprintf(float_file, sizeof(float_file), "Golden_ctx%02d_%s_float.txt", ctx, function_name);
+    snprintf(hex_file, sizeof(hex_file), "Golden_ctx%02d_%s_hex.txt", ctx, function_name);
+    snprintf(addr40_file, sizeof(addr40_file), "Golden_ctx%02d_%s_addr40.txt", ctx, function_name);
+
+    write_float_plain(float_file, data, length);
+    write_hex_plain(hex_file, data, length);
+    write_addr40_plain(addr40_file, data, length);
+
+    dump_dual_pea_split_ctx(ctx, function_name, data, length, n, alu_cfg,
+                            pea0_float_file, sizeof(pea0_float_file),
+                            pea1_float_file, sizeof(pea1_float_file));
+
+    write_golden_manifest_header_once();
+    if (golden_manifest_file != NULL) {
+        fprintf(golden_manifest_file,
+                "%02d,%s,%08x,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s\n",
+                ctx, function_name, cram_word, length,
+                pad, n, y, k, j, alu_cfg, stride, s_ldm, d_ldm, sa_ldm,
+                float_file, hex_file, addr40_file, pea0_float_file, pea1_float_file);
+        fflush(golden_manifest_file);
+    }
+}
+
+void dump_golden_extra(const char* function_name,
+                       const char* tag,
+                       const float* data,
+                       int length) {
+    int ctx = ctx_addr;
+    char float_file[180];
+    char hex_file[180];
+    char addr40_file[180];
+
+    snprintf(float_file, sizeof(float_file), "Golden_ctx%02d_%s_%s_float.txt", ctx, function_name, tag);
+    snprintf(hex_file, sizeof(hex_file), "Golden_ctx%02d_%s_%s_hex.txt", ctx, function_name, tag);
+    snprintf(addr40_file, sizeof(addr40_file), "Golden_ctx%02d_%s_%s_addr40.txt", ctx, function_name, tag);
+
+    write_float_plain(float_file, data, length);
+    write_hex_plain(hex_file, data, length);
+    write_addr40_plain(addr40_file, data, length);
+
+    write_golden_extra_manifest_header_once();
+    if (golden_extra_manifest_file != NULL) {
+        fprintf(golden_extra_manifest_file,
+                "%02d,%s,%s,%d,%s,%s,%s\n",
+                ctx, function_name, tag, length, float_file, hex_file, addr40_file);
+        fflush(golden_extra_manifest_file);
+    }
+}
+
+void dump_golden_post(const char* function_name,
+                      const float* data,
+                      int length) {
+    char float_file[160];
+    char hex_file[160];
+    char addr40_file[160];
+
+    snprintf(float_file, sizeof(float_file), "Golden_post_%s_float.txt", function_name);
+    snprintf(hex_file, sizeof(hex_file), "Golden_post_%s_hex.txt", function_name);
+    snprintf(addr40_file, sizeof(addr40_file), "Golden_post_%s_addr40.txt", function_name);
+
+    write_float_plain(float_file, data, length);
+    write_hex_plain(hex_file, data, length);
+    write_addr40_plain(addr40_file, data, length);
+}
+
+void dump_golden_extra_parts(const char* function_name,
+                             const char* tag,
+                             const float* data,
+                             int total_length,
+                             int part_length) {
+    dump_golden_extra(function_name, tag, data, total_length);
+
+    if (part_length <= 0 || total_length % part_length != 0) {
+        return;
+    }
+
+    int parts = total_length / part_length;
+    for (int p = 0; p < parts; p++) {
+        char part_tag[160];
+        snprintf(part_tag, sizeof(part_tag), "%s_part%d_offset%d", tag, p, p * part_length);
+        dump_golden_extra(function_name, part_tag, data + p * part_length, part_length);
+    }
+}
+// ======================= END DUAL_PE DEBUG/GOLDEN DUMP HELPERS =======================
+
+
 // Helper function to round a value to three decimal places
+// ======================= DUAL_PE CRAM OFFSET NOTE =======================
+// For branch-concat convolution contexts producing 320 values:
+//   physical LDM row length = 40 PE
+//   occupied rows = 320 / 40 = 8 rows
+// Therefore branch offsets inside the same destination LDM must be:
+//   0, 8, 16, 24
+// The old 0,16,32,48 pattern is a 20PE-era/incorrect 40PE/Dual_PE spacing
+// and leaves holes, causing later Add2D contexts to add wrong/gapped data.
+// =======================================================================
+
+
 float fixedpoint_converter(float value) {
 	if(value >= 512){
 		printf("Value is larger than 512 = %f\n", value);
@@ -192,6 +433,130 @@ float fixedpoint_converter(float value) {
     float scalingFactor = 64.0f; // 2^5
     return round(value * scalingFactor) / scalingFactor; 
 }
+
+// Finalize convolution output to match RTL write-back.
+// RTL stores quantized fixed-point values. For alu_cfg_ctx == 5,
+// the MAC path includes ReLU, so negative values must be clamped to zero
+// before dumping Golden_ctxXX_* files and before feeding later software layers.
+void finalize_conv_output_for_rtl(float data[], int length, int alu_cfg_ctx) {
+    for (int i = 0; i < length; i++) {
+        data[i] = fixedpoint_converter(data[i]);
+        if (alu_cfg_ctx == 5 && data[i] < 0) {
+            data[i] = 0;
+        }
+    }
+}
+
+
+// ======================= RTL-EXACT GOLDEN MAC HELPERS =======================
+// These helpers DO NOT change CRAM/WRAM/BRAM generation.
+// They only overwrite Output_Conv before dumping Golden_ctxXX_* so the software
+// golden follows the same Q6 MAC arithmetic as RTL ALU/MAC:
+//   1) multiply int16 Q6 x int16 Q6
+//   2) take product bits [21:6] and add product bit [5] for rounding
+//   3) accumulate in signed 16-bit wrap-around
+//   4) add bias only at the final MAC step
+//   5) apply ReLU only for alu_cfg_ctx == 5
+static inline int16_t rtl_wrap_i16(int32_t x) {
+    return (int16_t)((uint16_t)x);
+}
+
+static inline int16_t rtl_fx_from_float(float x) {
+    return FX_convert(x);
+}
+
+static inline float rtl_fx_to_float(int16_t x) {
+    return ((float)x) / ((float)SCALE_FACTOR);
+}
+
+static inline int16_t rtl_mul_q6_i16(int16_t a, int16_t b) {
+    int32_t prod = (int32_t)a * (int32_t)b;
+    uint32_t prod_bits = (uint32_t)prod;
+
+    // Verilog equivalent:
+    //   sum_final_wr = mult_result_rg[21:6] + mult_result_rg[5];
+    uint32_t slice_21_6 = (prod_bits >> FRACTIONAL_BITS) & 0xFFFFu;
+    uint32_t round_bit  = (prod_bits >> (FRACTIONAL_BITS - 1)) & 0x1u;
+    return (int16_t)((uint16_t)(slice_21_6 + round_bit));
+}
+
+void rtl_exact_conv1d_q6(float Output_Conv[],
+                         int output_len,
+                         const float Input_Conv[],
+                         int input_len,
+                         const float bias[],
+                         int bias_len,
+                         const float kernel[],
+                         int kernel_len,
+                         int stride,
+                         int kernel_size,
+                         int alu_cfg_ctx) {
+    if (output_len <= 0 || input_len <= 0 || bias_len <= 0 ||
+        kernel_len <= 0 || stride <= 0 || kernel_size <= 0) {
+        return;
+    }
+
+    int out_channels = bias_len;
+    if ((output_len % out_channels) != 0) {
+        printf("[RTL_GOLDEN_WARN] output_len %% out_channels != 0\n");
+        return;
+    }
+
+    int y_len = output_len / out_channels;
+    int kj_per_out_channel = kernel_len / out_channels;
+    if ((kernel_len % out_channels) != 0 || (kj_per_out_channel % kernel_size) != 0) {
+        printf("[RTL_GOLDEN_WARN] bad kernel dimensions: kernel_len=%d out_channels=%d kernel_size=%d\n",
+               kernel_len, out_channels, kernel_size);
+        return;
+    }
+
+    int in_channels = kj_per_out_channel / kernel_size;
+    if ((input_len % in_channels) != 0) {
+        printf("[RTL_GOLDEN_WARN] input_len %% in_channels != 0\n");
+        return;
+    }
+
+    int input_y_len = input_len / in_channels;
+    int relu_en = (alu_cfg_ctx == 5);
+
+    for (int n = 0; n < out_channels; n++) {
+        int16_t bias_fx = rtl_fx_from_float(bias[n]);
+
+        for (int y = 0; y < y_len; y++) {
+            int16_t acc = 0;
+            int total_mac = in_channels * kernel_size;
+
+            for (int kk = 0; kk < in_channels; kk++) {
+                for (int jj = 0; jj < kernel_size; jj++) {
+                    int mac_idx = kk * kernel_size + jj;
+                    int input_idx = input_y_len * kk + jj + y * stride;
+                    int weight_idx = kj_per_out_channel * n + kernel_size * kk + jj;
+
+                    int16_t x_fx = 0;
+                    if (input_idx >= 0 && input_idx < input_len) {
+                        x_fx = rtl_fx_from_float(Input_Conv[input_idx]);
+                    }
+
+                    int16_t w_fx = rtl_fx_from_float(kernel[weight_idx]);
+                    int16_t mul_fx = rtl_mul_q6_i16(x_fx, w_fx);
+
+                    if (mac_idx == total_mac - 1) {
+                        int16_t out_fx = rtl_wrap_i16((int32_t)mul_fx + (int32_t)acc + (int32_t)bias_fx);
+                        if (relu_en && out_fx < 0) {
+                            out_fx = 0;
+                        }
+                        Output_Conv[y_len * n + y] = rtl_fx_to_float(out_fx);
+                    } else {
+                        acc = rtl_wrap_i16((int32_t)mul_fx + (int32_t)acc);
+                    }
+                }
+            }
+        }
+    }
+}
+// ===================== END RTL-EXACT GOLDEN MAC HELPERS =====================
+
+
 
 void Padding_Conv1D_0(float input_Pad_Conv[320], float output_Pad_Conv[324]){
 	write_to_file2("LDM_File.txt", input_Pad_Conv, 320);
@@ -262,6 +627,18 @@ void Conv1D_0(float Input_Conv[324],float Output_Conv[1280], float bias[8], floa
 	int pad_ctx = 2, n_ctx = 3, y_ctx = 3, k_ctx = 0, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 1,s_ldm_ctx = 0, d_ldm_ctx = 3, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 1280, Input_Conv, 324, bias, 8, kernel, 56, stride, j_ctx + 1, alu_cfg_ctx);
+
+	// RTL exact rewrite for legacy layer1 golden file.
+	write_vivado_golden("Golden_Output_Layer1_relu.txt", Output_Conv, 1280);
+
+	finalize_conv_output_for_rtl(Output_Conv, 1280, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	
 	// fclose(weight_file);
 	// fclose(bias_file);
@@ -328,6 +705,15 @@ void Conv1D_1(float Input_Conv[1280],float Output_Conv[320], float bias[2], floa
 	int pad_ctx = 0, n_ctx = 0, y_ctx = 3, k_ctx = 7, j_ctx = 0, alu_cfg_ctx = 1, stride_ctx = 0, s_ldm_ctx = 3, d_ldm_ctx = 0, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 2, kernel, 16, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Conv1D_2(float Input_Conv[1280],float Output_Conv[320], float bias[2], float kernel[16]){
 	loop_for_channel_2:
@@ -372,6 +758,15 @@ void Conv1D_2(float Input_Conv[1280],float Output_Conv[320], float bias[2], floa
 	int pad_ctx = 0, n_ctx = 0, y_ctx = 3, k_ctx = 7, j_ctx = 0, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 2, kernel, 16, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_3(float input_Pad_Conv[320], float output_Pad_Conv[324]){
 	loop_for_3_channel_pad_3:
@@ -425,9 +820,18 @@ void Conv1D_3(float Input_Conv[324],float Output_Conv[320], float bias[2], float
 	
 	write_bias_to_file(bias, 2);
     write_weight_to_file(kernel, 12, 2);
-	int pad_ctx = 1, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 16;
+	int pad_ctx = 1, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 8;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 324, bias, 2, kernel, 12, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_4(float input_Pad_Conv[320], float output_Pad_Conv[328]){
 	loop_for_3_channel_pad_4:
@@ -480,9 +884,18 @@ void Conv1D_4(float Input_Conv[328],float Output_Conv[320], float bias[2], float
 	
 	write_bias_to_file(bias, 2);
     write_weight_to_file(kernel, 20, 2);
-	int pad_ctx = 2, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 32;
+	int pad_ctx = 2, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 16;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 328, bias, 2, kernel, 20, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_5(float input_Pad_Conv[320], float output_Pad_Conv[332]){
 	// write_to_file2("LDM_File.txt", input_Pad_Conv, 320);
@@ -531,9 +944,18 @@ void Conv1D_5(float Input_Conv[332],float Output_Conv[320], float bias[2], float
 	
 	write_bias_to_file(bias, 2);
     write_weight_to_file(kernel, 28, 2);
-	int pad_ctx = 3, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 48;
+	int pad_ctx = 3, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 24;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 332, bias, 2, kernel, 28, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	 
 }
  void Activation1(float Input_Activation[1280], float Output_Activation[1280]){
@@ -587,6 +1009,15 @@ void Conv1D_6(float Input_Conv[1280],float Output_Conv[320], float bias[2], floa
 	int pad_ctx = 0, n_ctx = 0, y_ctx = 3, k_ctx = 7, j_ctx = 0, alu_cfg_ctx = 1, stride_ctx = 0, s_ldm_ctx = 1, d_ldm_ctx = 0, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 2, kernel, 16, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Conv1D_7(float Input_Conv[1280],float Output_Conv[320], float bias[2], float kernel[16]){
 	loop_for_channel_7:
@@ -627,6 +1058,15 @@ void Conv1D_7(float Input_Conv[1280],float Output_Conv[320], float bias[2], floa
 	int pad_ctx = 0, n_ctx = 0, y_ctx = 3, k_ctx = 7, j_ctx = 0, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 2, kernel, 16, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	
 	// write_to_file("Output_Conv.txt", Output_Activation, 1280);
 }
@@ -677,9 +1117,18 @@ void Conv1D_8(float Input_Conv[324],float Output_Conv[320], float bias[2], float
 	
 	write_bias_to_file(bias, 2);
     write_weight_to_file(kernel, 12, 2);
-	int pad_ctx = 1, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 16;
+	int pad_ctx = 1, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 8;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 324, bias, 2, kernel, 12, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_9(float input_Pad_Conv[320], float output_Pad_Conv[328]){
 	loop_for_3_channel_pad_9:
@@ -726,9 +1175,18 @@ void Conv1D_9(float Input_Conv[328],float Output_Conv[320], float bias[2], float
 	
 	write_bias_to_file(bias, 2);
     write_weight_to_file(kernel, 20, 2);
-	int pad_ctx = 2, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 32;
+	int pad_ctx = 2, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 16;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 328, bias, 2, kernel, 20, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_10(float input_Pad_Conv[320], float output_Pad_Conv[332]){
 	loop_for_3_channel_pad_10:
@@ -775,9 +1233,18 @@ void Conv1D_10(float Input_Conv[332],float Output_Conv[320], float bias[2], floa
 	
 	write_bias_to_file(bias, 2);
     write_weight_to_file(kernel, 28, 2);
-	int pad_ctx = 3, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 48;
+	int pad_ctx = 3, n_ctx = 0, y_ctx = 3, k_ctx = 1, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 24;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 332, bias, 2, kernel, 28, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
  void Activation2(float Input_Activation[1280], float Output_Activation[1280]){
 	for (int i = 0; i < 1280; i++){
@@ -792,6 +1259,8 @@ void Conv1D_10(float Input_Conv[332],float Output_Conv[320], float bias[2], floa
 }
  void Add2D_0(float input_0[1280], float input_1[1280], float output[1280]) {
 	int size =1280;
+	dump_golden_extra_parts(__func__, "input0_relu2_before_add", input_0, 1280, 320);
+	dump_golden_extra_parts(__func__, "input1_residual_before_add", input_1, 1280, 320);
 	for (int i = 0; i < size; i++){
 		output[i] = input_0[i] + input_1[i];
 	}
@@ -800,6 +1269,12 @@ void Conv1D_10(float Input_Conv[332],float Output_Conv[320], float bias[2], floa
 		int pad_ctx = 0, n_ctx = 7, y_ctx = 3, k_ctx = 0, j_ctx = 0, alu_cfg_ctx = 2, stride_ctx = 0, s_ldm_ctx = 2, d_ldm_ctx = 1, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	dump_golden_ctx(__func__, output, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
+
+	dump_golden_extra_parts(__func__, "output_after_add", output, 1280, 320);
 }
 void Padding_Conv1D_11(float input_Pad_Conv[1280], float output_Pad_Conv[1296]){
 	// write_to_file2("LDM_File.txt", input_Pad_Conv, 1280);
@@ -875,6 +1350,15 @@ void Conv1D_11(float Input_Conv[1296],float Output_Conv[1280], float bias[16], f
 	int pad_ctx = 1, n_ctx = 7, y_ctx = 1, k_ctx = 7, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 1,s_ldm_ctx = 1, d_ldm_ctx = 3, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 1280, Input_Conv, 1296, bias, 16, kernel, 640, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 1280, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	
 	for (int i = 0; i < 1280; i++) {
         Output_Conv[i] = fixedpoint_converter(Output_Conv[i]);
@@ -932,6 +1416,15 @@ void Conv1D_12(float Input_Conv[1280],float Output_Conv[320], float bias[4], flo
 	int pad_ctx = 0, n_ctx = 1, y_ctx = 1, k_ctx = 15, j_ctx = 0, alu_cfg_ctx = 1, stride_ctx = 0, s_ldm_ctx = 3, d_ldm_ctx = 0, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 4, kernel, 64, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Conv1D_13(float Input_Conv[1280],float Output_Conv[320], float bias[4], float kernel[64]){
 	loop_for_channel_13:
@@ -985,6 +1478,15 @@ void Conv1D_13(float Input_Conv[1280],float Output_Conv[320], float bias[4], flo
 	int pad_ctx = 0, n_ctx = 1, y_ctx = 1, k_ctx = 15, j_ctx = 0, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 4, kernel, 64, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	
 }
 void Padding_Conv1D_14(float input_Pad_Conv[320], float output_Pad_Conv[328]){
@@ -1032,9 +1534,18 @@ void Conv1D_14(float Input_Conv[328],float Output_Conv[320], float bias[4], floa
 	
 	write_bias_to_file(bias, 4);
     write_weight_to_file(kernel, 48, 4);
-	int pad_ctx = 1, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 16;
+	int pad_ctx = 1, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 8;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 328, bias, 4, kernel, 48, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_15(float input_Pad_Conv[320], float output_Pad_Conv[336]){
 	loop_for_3_channel_pad_15:
@@ -1081,9 +1592,18 @@ void Conv1D_15(float Input_Conv[336],float Output_Conv[320], float bias[4], floa
 	
 	write_bias_to_file(bias, 4);
     write_weight_to_file(kernel, 80, 4);
-	int pad_ctx = 2, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 32;
+	int pad_ctx = 2, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 16;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 336, bias, 4, kernel, 80, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	
 }
 void Padding_Conv1D_16(float input_Pad_Conv[320], float output_Pad_Conv[344]){
@@ -1131,9 +1651,18 @@ void Conv1D_16(float Input_Conv[344],float Output_Conv[320], float bias[4], floa
 	
 	write_bias_to_file(bias, 4);
     write_weight_to_file(kernel, 112, 4);
-	int pad_ctx = 3, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 48;
+	int pad_ctx = 3, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 24;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 344, bias, 4, kernel, 112, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
  void Activation4(float Input_Activation[1280], float Output_Activation[1280]){
 	for (int i = 0; i < 1280; i++){
@@ -1186,6 +1715,15 @@ void Conv1D_17(float Input_Conv[1280],float Output_Conv[320], float bias[4], flo
 	int pad_ctx = 0, n_ctx = 1, y_ctx = 1, k_ctx = 15, j_ctx = 0, alu_cfg_ctx = 1, stride_ctx = 0, s_ldm_ctx = 2, d_ldm_ctx = 0, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 4, kernel, 64, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Conv1D_18(float Input_Conv[1280],float Output_Conv[320], float bias[4], float kernel[64]){
 	loop_for_channel_18:
@@ -1227,6 +1765,15 @@ void Conv1D_18(float Input_Conv[1280],float Output_Conv[320], float bias[4], flo
 	int pad_ctx = 0, n_ctx = 1, y_ctx = 1, k_ctx = 15, j_ctx = 0, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 4, kernel, 64, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	
 }
 void Padding_Conv1D_19(float input_Pad_Conv[320], float output_Pad_Conv[328]){
@@ -1274,9 +1821,18 @@ void Conv1D_19(float Input_Conv[328],float Output_Conv[320], float bias[4], floa
 	
 	write_bias_to_file(bias, 4);
     write_weight_to_file(kernel, 48, 4);
-	int pad_ctx = 1, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 16;
+	int pad_ctx = 1, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 8;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 328, bias, 4, kernel, 48, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_20(float input_Pad_Conv[320], float output_Pad_Conv[336]){
 	loop_for_3_channel_pad_20:
@@ -1323,9 +1879,18 @@ void Conv1D_20(float Input_Conv[336],float Output_Conv[320], float bias[4], floa
 	
 	write_bias_to_file(bias, 4);
     write_weight_to_file(kernel, 80, 4);
-	int pad_ctx = 2, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 32;
+	int pad_ctx = 2, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 16;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 336, bias, 4, kernel, 80, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_21(float input_Pad_Conv[320], float output_Pad_Conv[344]){
 	loop_for_3_channel_pad_21:
@@ -1371,9 +1936,18 @@ void Conv1D_21(float Input_Conv[344],float Output_Conv[320], float bias[4], floa
 	
 	write_bias_to_file(bias, 4);
     write_weight_to_file(kernel, 112, 4);
-	int pad_ctx = 3, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 48;
+	int pad_ctx = 3, n_ctx = 1, y_ctx = 1, k_ctx = 3, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 24;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 344, bias, 4, kernel, 112, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
  void Activation5(float Input_Activation[1280], float Output_Activation[1280]){
 	for (int i = 0; i < 1280; i++){
@@ -1388,6 +1962,8 @@ void Conv1D_21(float Input_Conv[344],float Output_Conv[320], float bias[4], floa
 }
  void Add2D_1(float input_0[1280], float input_1[1280], float output[1280]) {
 	int size =1280;
+	dump_golden_extra_parts(__func__, "input0_relu4_before_add", input_0, 1280, 320);
+	dump_golden_extra_parts(__func__, "input1_residual_before_add", input_1, 1280, 320);
 	for (int i = 0; i < size; i++){
 		output[i] = input_0[i] + input_1[i];
 	}
@@ -1397,6 +1973,12 @@ void Conv1D_21(float Input_Conv[344],float Output_Conv[320], float bias[4], floa
 	int pad_ctx = 0, n_ctx = 7, y_ctx = 3, k_ctx = 0, j_ctx = 0, alu_cfg_ctx = 2, stride_ctx = 0, s_ldm_ctx = 1, d_ldm_ctx = 0, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	dump_golden_ctx(__func__, output, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
+
+	dump_golden_extra_parts(__func__, "output_after_add", output, 1280, 320);
 }
 void Padding_Conv1D_22(float input_Pad_Conv[1280], float output_Pad_Conv[1280]){
 	loop_for_3_channel_pad_22:
@@ -1446,6 +2028,15 @@ void Conv1D_22(float Input_Conv[1280],float Output_Conv[1280], float bias[32], f
 	int pad_ctx = 0, n_ctx = 15, y_ctx = 0, k_ctx = 15, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 1,s_ldm_ctx = 0, d_ldm_ctx = 3, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 1280, Input_Conv, 1280, bias, 32, kernel, 1536, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 1280, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
  void Activation6(float Input_Activation[1280], float Output_Activation[1280]){
 	for (int i = 0; i < 1280; i++){
@@ -1498,6 +2089,15 @@ void Conv1D_23(float Input_Conv[1280],float Output_Conv[320], float bias[8], flo
 	int pad_ctx = 0, n_ctx = 3, y_ctx = 0, k_ctx = 31, j_ctx = 0, alu_cfg_ctx = 1, stride_ctx = 0, s_ldm_ctx = 3, d_ldm_ctx = 0, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 8, kernel, 256, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Conv1D_24(float Input_Conv[1280],float Output_Conv[320], float bias[8], float kernel[256]){
 	loop_for_channel_24:
@@ -1538,6 +2138,15 @@ void Conv1D_24(float Input_Conv[1280],float Output_Conv[320], float bias[8], flo
 	int pad_ctx = 0, n_ctx = 3, y_ctx = 0, k_ctx = 31, j_ctx = 0, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 8, kernel, 256, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	
 }
 void Padding_Conv1D_25(float input_Pad_Conv[320], float output_Pad_Conv[336]){
@@ -1585,9 +2194,18 @@ void Conv1D_25(float Input_Conv[336],float Output_Conv[320], float bias[8], floa
 	
 	write_bias_to_file(bias, 8);
     write_weight_to_file(kernel, 192, 8);
-	int pad_ctx = 1, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 16;
+	int pad_ctx = 1, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 8;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 336, bias, 8, kernel, 192, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_26(float input_Pad_Conv[320], float output_Pad_Conv[352]){
 	loop_for_3_channel_pad_26:
@@ -1634,9 +2252,18 @@ void Conv1D_26(float Input_Conv[352],float Output_Conv[320], float bias[8], floa
 	
 	write_bias_to_file(bias, 8);
     write_weight_to_file(kernel, 320, 8);
-	int pad_ctx = 2, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 32;
+	int pad_ctx = 2, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 16;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 352, bias, 8, kernel, 320, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_27(float input_Pad_Conv[320], float output_Pad_Conv[368]){
 	loop_for_3_channel_pad_27:
@@ -1683,9 +2310,18 @@ void Conv1D_27(float Input_Conv[368],float Output_Conv[320], float bias[8], floa
 	
 	write_bias_to_file(bias, 8);
     write_weight_to_file(kernel, 448, 8);
-	int pad_ctx = 3, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 48;
+	int pad_ctx = 3, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 1, sa_ldm_ctx = 24;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 368, bias, 8, kernel, 448, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
  void Activation7(float Input_Activation[1280], float Output_Activation[1280]){
 	for (int i = 0; i < 1280; i++){
@@ -1737,6 +2373,15 @@ void Conv1D_28(float Input_Conv[1280],float Output_Conv[320], float bias[8], flo
 	int pad_ctx = 0, n_ctx = 3, y_ctx = 0, k_ctx = 31, j_ctx = 0, alu_cfg_ctx = 1, stride_ctx = 0, s_ldm_ctx = 1, d_ldm_ctx = 0, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 8, kernel, 256, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Conv1D_29(float Input_Conv[1280],float Output_Conv[320], float bias[8], float kernel[256]){
 	loop_for_channel_29:
@@ -1777,6 +2422,15 @@ void Conv1D_29(float Input_Conv[1280],float Output_Conv[320], float bias[8], flo
 	int pad_ctx = 0, n_ctx = 3, y_ctx = 0, k_ctx = 31, j_ctx = 0, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 1280, bias, 8, kernel, 256, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	
 }
 void Padding_Conv1D_30(float input_Pad_Conv[320], float output_Pad_Conv[336]){
@@ -1824,9 +2478,18 @@ void Conv1D_30(float Input_Conv[336],float Output_Conv[320], float bias[8], floa
 	
 	write_bias_to_file(bias, 8);
     write_weight_to_file(kernel, 192, 8);
-	int pad_ctx = 1, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 16;
+	int pad_ctx = 1, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 2, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 8;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 336, bias, 8, kernel, 192, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	
 }
 void Padding_Conv1D_31(float input_Pad_Conv[320], float output_Pad_Conv[352]){
@@ -1874,9 +2537,18 @@ void Conv1D_31(float Input_Conv[352],float Output_Conv[320], float bias[8], floa
 	
 	write_bias_to_file(bias, 8);
     write_weight_to_file(kernel, 320, 8);
-	int pad_ctx = 2, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 32;
+	int pad_ctx = 2, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 4, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 16;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 352, bias, 8, kernel, 320, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Conv1D_32(float input_Pad_Conv[320], float output_Pad_Conv[368]){
 	loop_for_3_channel_pad_32:
@@ -1923,9 +2595,18 @@ void Conv1D_32(float Input_Conv[368],float Output_Conv[320], float bias[8], floa
 	
 	write_bias_to_file(bias, 8);
     write_weight_to_file(kernel, 448, 8);
-	int pad_ctx = 3, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 48;
+	int pad_ctx = 3, n_ctx = 3, y_ctx = 0, k_ctx = 7, j_ctx = 6, alu_cfg_ctx = 5, stride_ctx = 0, s_ldm_ctx = 0, d_ldm_ctx = 2, sa_ldm_ctx = 24;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	
+		rtl_exact_conv1d_q6(Output_Conv, 320, Input_Conv, 368, bias, 8, kernel, 448, stride, j_ctx + 1, alu_cfg_ctx);
+
+	finalize_conv_output_for_rtl(Output_Conv, 320, alu_cfg_ctx);
+
+	dump_golden_ctx(__func__, Output_Conv, 320, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
  void Activation8(float Input_Activation[1280], float Output_Activation[1280]){
 	for (int i = 0; i < 1280; i++){
@@ -1941,6 +2622,8 @@ void Conv1D_32(float Input_Conv[368],float Output_Conv[320], float bias[8], floa
 }
  void Add2D_2(float input_0[1280], float input_1[1280], float output[1280]) {
 	int size =1280;
+	dump_golden_extra_parts(__func__, "input0_relu8_before_add", input_0, 1280, 320);
+	dump_golden_extra_parts(__func__, "input1_residual_before_add", input_1, 1280, 320);
 	for (int i = 0; i < size; i++){
 		output[i] = input_0[i] + input_1[i];
 	}
@@ -1948,6 +2631,12 @@ void Conv1D_32(float Input_Conv[368],float Output_Conv[320], float bias[8], floa
 	int pad_ctx = 0, n_ctx = 7, y_ctx = 3, k_ctx = 0, j_ctx = 0, alu_cfg_ctx = 2, stride_ctx = 0, s_ldm_ctx = 2, d_ldm_ctx = 0, sa_ldm_ctx = 0;
     uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	dump_golden_ctx(__func__, output, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
+
+	dump_golden_extra_parts(__func__, "output_after_add", output, 1280, 320);
 }
 
 
@@ -1992,6 +2681,10 @@ void Max_Pool1D_0(float input_MaxPooling[2568], float output_MaxPooling[1280]){
 		// Call the function to concatenate inputs into a 28-bit output
 		uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 		write_context_to_file( &result, 1);
+
+	dump_golden_ctx(__func__, output_MaxPooling, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Pool_1(float input_Pad_Pool[1280], float output_Pad_Pool[1296]){
 	loop_for_3_channel_pad_1:
@@ -2037,6 +2730,10 @@ void Max_Pool1D_1(float input_MaxPooling[1296], float output_MaxPooling[1280]){
 		// Call the function to concatenate inputs into a 28-bit output
 		uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 		write_context_to_file( &result, 1);
+
+	dump_golden_ctx(__func__, output_MaxPooling, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Pool_2(float input_Pad_Pool[1280], float output_Pad_Pool[1312]){
 	loop_for_3_channel_pad_2:
@@ -2075,6 +2772,10 @@ void Max_Pool1D_2(float input_MaxPooling[1312], float output_MaxPooling[1280]){
 		// Call the function to concatenate inputs into a 28-bit output
 		uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 		write_context_to_file( &result, 1);
+
+	dump_golden_ctx(__func__, output_MaxPooling, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Pool_3(float input_Pad_Pool[1280], float output_Pad_Pool[1312]){
 	loop_for_3_channel_pad_3:
@@ -2112,6 +2813,10 @@ void Max_Pool1D_3(float input_MaxPooling[1312], float output_MaxPooling[1280]){
 		// Call the function to concatenate inputs into a 28-bit output
 		uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 		write_context_to_file( &result, 1);
+
+	dump_golden_ctx(__func__, output_MaxPooling, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Pool_4(float input_Pad_Pool[1280], float output_Pad_Pool[1344]){
 	loop_for_3_channel_pad_4:
@@ -2149,6 +2854,10 @@ void Max_Pool1D_4(float input_MaxPooling[1344], float output_MaxPooling[1280]){
 		// Call the function to concatenate inputs into a 28-bit output
 		uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 		write_context_to_file( &result, 1);
+
+	dump_golden_ctx(__func__, output_MaxPooling, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 }
 void Padding_Pool_5(float input_Pad_Pool[1280], float output_Pad_Pool[1344]){
 	loop_for_3_channel_pad_5:
@@ -2186,6 +2895,10 @@ void Max_Pool1D_5(float input_MaxPooling[1344], float output_MaxPooling[1280]){
 	// Call the function to concatenate inputs into a 28-bit output
 	uint32_t result = concatenate_to_32bit(pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx, alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_context_to_file( &result, 1);
+
+	dump_golden_ctx(__func__, output_MaxPooling, 1280, result,
+	                pad_ctx, n_ctx, y_ctx, k_ctx, j_ctx,
+	                alu_cfg_ctx, stride_ctx, s_ldm_ctx, d_ldm_ctx, sa_ldm_ctx);
 	write_vivado_golden("Golden_Final_Layer42.txt", output_MaxPooling, 1280);
 }
 
@@ -2205,6 +2918,8 @@ void GlobalAveragePool1D(float input_GlobalAveragePool1D[1280], float output_Glo
         }
         output_GlobalAveragePool1D[i] = avg / 40.0f;
     }
+
+	dump_golden_post(__func__, output_GlobalAveragePool1D, 32);
 }
 
 void Dense_0(float input_Dense[32],float &output_Dense,float bias[5],float weight[160]){
@@ -2231,7 +2946,10 @@ void Dense_0(float input_Dense[32],float &output_Dense,float bias[5],float weigh
 		}
 		out_Dense[i]=s+bias[i];
 	}
-	int maxindex = 0;
+	
+	dump_golden_post(__func__, out_Dense, 5);
+
+int maxindex = 0;
 	float max=out_Dense[0];
 	loop_detect:
 	for (int i=0; i<5; i++){

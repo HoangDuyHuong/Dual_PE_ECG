@@ -1,0 +1,1 @@
+time,pe,ctx,cfg,en,layer_done,ctrl_store1,ctrl_waddr1,ctrl_baddr1,wvalid1,bvalid1,weight1,bias1,shared_pix,shared_valid,alu_out,alu_valid,alu_en,alu_addr
