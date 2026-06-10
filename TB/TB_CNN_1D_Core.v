@@ -12,7 +12,7 @@
 // =====================================================================
 `define LDM_DEPTH        320
 `define CRAM_FILE_DEPTH  42
-`define RUN_CTX_COUNT    42
+`define RUN_CTX_COUNT    11
 `define WRAM_DEPTH       6096
 `define BRAM_DEPTH       196
 

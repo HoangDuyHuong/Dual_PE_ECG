@@ -221,8 +221,11 @@ module Controller
 	assign PE_Incr_wr			= ((PE_Selection_wr + (j_count_rg)) >= `PE_NUM) ? PE_Selection_wr + (j_count_rg) - `PE_NUM: PE_Selection_wr + (j_count_rg);
 	assign CTRL_LDM_addra_Incr_out	= CTRL_LDM_addra_Incr_rg;
 	
-	assign Padding_Read_SEL_wr	= (((y_count_rg == 0)&(j_count_rg < pad_wr)))? `PE_NUM - pad_wr + j_count_rg : 
-								  ((pad_wr != 0)&((y_count_rg == y_wr)&(j_count_rg >= (j_wr - pad_wr)))) ? j_count_rg - pad_wr - 1 : 63;
+	assign Padding_Read_SEL_wr =
+		(((y_count_rg == 0) & (j_count_rg < pad_wr))) ? `PE_NUM - pad_wr + j_count_rg :
+		((pad_wr != 0) & ((y_count_rg == y_wr) & (j_count_rg >= (j_wr - pad_wr)))) ? j_count_rg - pad_wr :
+		63;
+	
 	assign Padding_Read_out 	= Padding_Read_rg;
 	
 	///--------- State Machine ---------///

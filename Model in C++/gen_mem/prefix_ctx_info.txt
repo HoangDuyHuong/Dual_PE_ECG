@@ -1,9 +1,9 @@
-RUN_CTX_COUNT=42
-target_ctx_word=0ec01200
-n=7
+RUN_CTX_COUNT=11
+target_ctx_word=40c2a888
+n=0
 y=3
-alu_cfg=2
-d_ldm=0
-sa_ldm=0
-rows_to_dump=32
-length=1280
+alu_cfg=5
+d_ldm=2
+sa_ldm=8
+rows_to_dump=8
+length=320
