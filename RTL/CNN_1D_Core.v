@@ -55,7 +55,7 @@ module CNN_1D_Core
 	wire [`PE_NUM_BITS-1:0]  						MUX_Selection_wr;
 	wire 					              			Stride_wr;
 	wire 					              			MP_Padding_wr, MP_Padding_2_wr, MP_Padding_3_wr;
-	wire 					              			En_wr, layer_done_wr, Parity_PE_Selection_wr;
+	wire 					              			En_wr, PE_En_wr, layer_done_wr, Parity_PE_Selection_wr;
 
 	wire [`S_LDM_BITS+`LDM_ADDR_BITS-1:0] 			CTRL_LDM_addra_wr, CTRL_LDM_addrb_wr;
 	wire 					              			CTRL_LDM_ena_wr, CTRL_LDM_enb_wr;
@@ -170,7 +170,7 @@ module CNN_1D_Core
 		.CTRL_BRAM_web_0_out(CTRL_BRAM_web_0_wr), .CTRL_BRAM_web_1_out(CTRL_BRAM_web_1_wr),
 		.CFG_out(CFG_wr), .MUX_Selection_out(MUX_Selection_wr), .Stride_out(Stride_wr), .Overarray_out(Overarray_wr),
 		.MP_Padding_out(MP_Padding_wr), .MP_Padding_2_out(MP_Padding_2_wr), .MP_Padding_3_out(MP_Padding_3_wr),
-		.En_out(En_wr), .layer_done_out(layer_done_wr), .Parity_PE_Selection_out(Parity_PE_Selection_wr),
+		.En_out(En_wr), .PE_En_out(PE_En_wr), .layer_done_out(layer_done_wr), .Parity_PE_Selection_out(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_out(CTRL_LDM_addra_wr), .CTRL_LDM_ena_out(CTRL_LDM_ena_wr), .CTRL_LDM_wea_out(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_out(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_out(CTRL_LDM_enb_wr), .CTRL_LDM_web_out(CTRL_LDM_web_wr),
 		.CTRL_LDM_Store_out(CTRL_LDM_Store_wr), .CTRL_LDM_Store_1_out(CTRL_LDM_Store_1_wr),
@@ -601,7 +601,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[0]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -626,7 +626,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[1]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -651,7 +651,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[2]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -676,7 +676,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[3]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -701,7 +701,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[4]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -726,7 +726,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[5]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -751,7 +751,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[6]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -776,7 +776,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[7]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -801,7 +801,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[8]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -826,7 +826,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[9]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -851,7 +851,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[10]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -876,7 +876,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[11]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -901,7 +901,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[12]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -926,7 +926,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[13]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -951,7 +951,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[14]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -976,7 +976,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[15]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1001,7 +1001,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[16]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1026,7 +1026,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[17]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1051,7 +1051,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[18]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1076,7 +1076,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[19]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1101,7 +1101,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[20]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1126,7 +1126,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[21]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1151,7 +1151,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[22]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1176,7 +1176,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[23]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1201,7 +1201,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[24]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1226,7 +1226,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[25]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1251,7 +1251,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[26]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1276,7 +1276,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[27]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1301,7 +1301,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[28]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1326,7 +1326,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[29]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1351,7 +1351,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[30]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1376,7 +1376,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[31]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1401,7 +1401,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[32]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1426,7 +1426,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[33]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1451,7 +1451,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[34]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1476,7 +1476,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[35]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1501,7 +1501,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[36]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1526,7 +1526,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[37]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1551,7 +1551,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[38]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1576,7 +1576,7 @@ module CNN_1D_Core
 		.AXI_LDM_addra_in(AXI_LDM_addra_in), .AXI_LDM_dina_in(AXI_LDM_dina_in),
 		.AXI_LDM_ena_in(AXI_LDM_ena_in), .AXI_LDM_wea_in(AXI_LDM_wea_in),
 		.AXI_LDM_douta_out(AXI_LDM_douta_out_wr[39]),
-		.layer_done_in(layer_done_wr), .En_in(En_wr), .CFG_in(CFG_wr),
+		.layer_done_in(layer_done_wr), .En_in(PE_En_wr), .CFG_in(CFG_wr),
 		.Parity_PE_Selection_in(Parity_PE_Selection_wr),
 		.CTRL_LDM_addra_in(CTRL_LDM_addra_wr), .CTRL_LDM_ena_in(CTRL_LDM_ena_wr), .CTRL_LDM_wea_in(CTRL_LDM_wea_wr),
 		.CTRL_LDM_addrb_in(CTRL_LDM_addrb_wr), .CTRL_LDM_enb_in(CTRL_LDM_enb_wr), .CTRL_LDM_web_in(CTRL_LDM_web_wr),
@@ -1602,7 +1602,7 @@ module CNN_1D_Core
 	// ==================================================================
 	PE_lite #(.UNIT_NO(0)) pea1_0 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1615,7 +1615,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(1)) pea1_1 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1628,7 +1628,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(2)) pea1_2 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1641,7 +1641,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(3)) pea1_3 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1654,7 +1654,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(4)) pea1_4 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1667,7 +1667,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(5)) pea1_5 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1680,7 +1680,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(6)) pea1_6 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1693,7 +1693,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(7)) pea1_7 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1706,7 +1706,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(8)) pea1_8 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1719,7 +1719,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(9)) pea1_9 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1732,7 +1732,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(10)) pea1_10 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1745,7 +1745,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(11)) pea1_11 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1758,7 +1758,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(12)) pea1_12 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1771,7 +1771,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(13)) pea1_13 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1784,7 +1784,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(14)) pea1_14 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1797,7 +1797,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(15)) pea1_15 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1810,7 +1810,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(16)) pea1_16 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1823,7 +1823,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(17)) pea1_17 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1836,7 +1836,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(18)) pea1_18 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1849,7 +1849,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(19)) pea1_19 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1862,7 +1862,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(20)) pea1_20 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1875,7 +1875,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(21)) pea1_21 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1888,7 +1888,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(22)) pea1_22 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1901,7 +1901,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(23)) pea1_23 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1914,7 +1914,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(24)) pea1_24 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1927,7 +1927,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(25)) pea1_25 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1940,7 +1940,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(26)) pea1_26 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1953,7 +1953,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(27)) pea1_27 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1966,7 +1966,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(28)) pea1_28 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1979,7 +1979,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(29)) pea1_29 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -1992,7 +1992,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(30)) pea1_30 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -2005,7 +2005,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(31)) pea1_31 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -2018,7 +2018,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(32)) pea1_32 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -2031,7 +2031,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(33)) pea1_33 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -2044,7 +2044,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(34)) pea1_34 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -2057,7 +2057,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(35)) pea1_35 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -2070,7 +2070,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(36)) pea1_36 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -2083,7 +2083,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(37)) pea1_37 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -2096,7 +2096,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(38)) pea1_38 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),
@@ -2109,7 +2109,7 @@ module CNN_1D_Core
 
 	PE_lite #(.UNIT_NO(39)) pea1_39 (
 		.CLK(CLK), .RST(RST),
-		.En_in(En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
+		.En_in(PE_En_wr), .layer_done_in(layer_done_wr), .CFG_in(CFG_wr),
 		.CTRL_LDM_Store_in(CTRL_LDM_Store_1_wr),
 		.Weight_valid_in(Weight_valid_2_1_rg), .Weight_in(Weight_1_rg),
 		.Bias_valid_in(Bias_valid_2_1_rg), .Bias_in(Bias_1_rg),

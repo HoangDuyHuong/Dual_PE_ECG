@@ -3642,6 +3642,45 @@ module SGB
 			Parity_PE_Selection_rg <= Parity_PE_Selection_in;
 		end
 	end
+
+// ================= DEBUG CTX29 SGB WINDOW =================
+// initial begin
+//     $display("[DBG_SGB29_COMPILED] SGB debug block is compiled. instance=%m");
+
+//     #88615;
+
+//     repeat (12) begin
+//         $display("[DBG_SGB29] t=%0t | En=%0b Stride=%0b CFG=%b | MUX=%0d parity_in=%0b parity_rg=%0b | PE22_src4_P1_v=%0b PE22_src4_P1=%h PE22_src5_P1_v=%0b PE22_src5_P1=%h | PE22_to_mux=%h Shared22_v=%0b Shared22=%h | PE23_src6_P1_v=%0b PE23_src6_P1=%h PE23_src7_P1_v=%0b PE23_src7_P1=%h | PE23_to_mux=%h Shared23_v=%0b Shared23=%h",
+//             $time,
+//             En_in,
+//             Stride_in,
+//             CFG_in,
+//             MUX_Selection_in,
+//             Parity_PE_Selection_in,
+//             Parity_PE_Selection_rg,
+
+//             PEA0_PE4_Pixel_1_valid_in,
+//             PEA0_PE4_Pixel_1_in,
+//             PEA0_PE5_Pixel_1_valid_in,
+//             PEA0_PE5_Pixel_1_in,
+//             PE22_Pixel_to_MUX_wr,
+//             Shared_PE22_Pixel_0_valid_out_wr,
+//             Shared_PE22_Pixel_0_out_wr,
+
+//             PEA0_PE6_Pixel_1_valid_in,
+//             PEA0_PE6_Pixel_1_in,
+//             PEA0_PE7_Pixel_1_valid_in,
+//             PEA0_PE7_Pixel_1_in,
+//             PE23_Pixel_to_MUX_wr,
+//             Shared_PE23_Pixel_0_valid_out_wr,
+//             Shared_PE23_Pixel_0_out_wr
+//         );
+
+//         #10;
+//     end
+// end
+// // =============== END DEBUG CTX29 SGB WINDOW ===============
+
 endmodule
 
 module MUX_4_1 (
@@ -3702,4 +3741,5 @@ always @* begin
             default: mux_40_1_out = mux_0;
         endcase
     end
+
 endmodule

@@ -252,5 +252,55 @@ module PE
 		end
 	end
   
+// ================= DEBUG CTX29 PE WINDOW =================
+// initial begin
+//     #88615;
+
+//     repeat (12) begin
+//         if ((UNIT_NO == 22) || (UNIT_NO == 23) || (UNIT_NO == 24) || (UNIT_NO == 25)) begin
+//             $display("[DBG_PE29] t=%0t PE=%0d | En=%0b Stride=%0b CFG=%b Store=%h | Wv=%0b W=%h | P0v=%0b P0=%h | P1v=%0b P1=%h | P2v=%0b P2=%h | Bv=%0b B=%h | S0v=%0b S0=%h | S1v=%0b S1=%h | S2v=%0b S2=%h | Dv=%0b D=%h | ALU_addr_rg=%0d ALU_addr=%h",
+//                 $time,
+//                 UNIT_NO,
+//                 En_in,
+//                 Stride_in,
+//                 CFG_in,
+//                 CTRL_LDM_Store_in,
+
+//                 Weight_valid_in,
+//                 Weight_in,
+
+//                 Pixel_0_valid_in,
+//                 Pixel_0_in,
+
+//                 Pixel_1_valid_in,
+//                 Pixel_1_in,
+
+//                 Pixel_2_valid_out_wr,
+//                 Pixel_2_out_wr,
+
+//                 Bias_valid_in,
+//                 Bias_in,
+
+//                 S0_valid_wr,
+//                 S0_wr,
+
+//                 S1_valid_wr,
+//                 S1_wr,
+
+//                 S2_valid_wr,
+//                 S2_wr,
+
+//                 D0_valid_wr,
+//                 D0_wr,
+
+//                 ALU_LDM_addrb_rg,
+//                 ALU_LDM_addrb_wr
+//             );
+//         end
+
+//         #10;
+//     end
+// end
+// // =============== END DEBUG CTX29 PE WINDOW ===============  
 endmodule
 

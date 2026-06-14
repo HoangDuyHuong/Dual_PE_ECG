@@ -1,11 +1,11 @@
 Metric,Value
 Architecture,Dual-PEA 40PE
 Samples,15000
-Correct,14100
-Accuracy_percent,94.000000
-Total_wall_time_s,19.307429917
-FPGA_run_read_time_s,11.080029361
-Avg_FPGA_time_per_sample_ms,0.738668624
-Throughput_samples_per_s,1353.787026
+Correct,14097
+Accuracy_percent,93.980000
+Total_wall_time_s,12.700288456
+FPGA_run_read_time_s,11.063148382
+Avg_FPGA_time_per_sample_ms,0.737543225
+Throughput_samples_per_s,1355.852736
 Output_bank,0
 Output_start_addr,0

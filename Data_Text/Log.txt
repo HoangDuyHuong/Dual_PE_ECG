@@ -1,124 +1,38 @@
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> python compare_prefix_ctx_quick.py --ctx 14 --tol-lsb 2 --dir "D:/HOC_TAP/KLTN/My_Proj/Advance_ECG/Model in C++/gen_mem"
-========================================================================
-PREFIX CTX COMPARE | ctx=14 | Add2D_0
-========================================================================
-CRAM      : 0ec01240
-RTL file  : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\output.txt
-Golden    : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\Golden_ctx14_Add2D_0_hex.txt
-Length    : rtl=1280 | golden=1280 | compared=1280 | missing=0
-Tol       : 2 LSB | fractional_bits=6
-------------------------------------------------------------------------
-STATUS    : FAIL
-Mismatch  : exact=12 | over_tol=1 | within_tol=1279/1280
-MEA/MAE   : 0.013281 LSB | 0.000207520
-Signed ME : -0.007031 LSB | -0.000109863
-RMSE      : 0.150520 LSB | 0.002351874
-Max Abs   : 3 LSB | 0.046875000 | idx=637
-------------------------------------------------------------------------
-Vector stats: raw_i16 (float)
-RTL      min=      0 (  0.000000) | max=    448 (  7.000000) | mean=   138.327 (  2.161365) | zero= 182 | neg=   0
-Golden   min=      0 (  0.000000) | max=    448 (  7.000000) | mean=   138.334 (  2.161475) | zero= 182 | neg=   0
-------------------------------------------------------------------------
-First mismatches over tolerance:
-idx     rtl_hex golden_hex   rtl_i16 golden_i16   err_lsb   err_float
-637        014f       0152       335        338        -3   -0.046875
-========================================================================
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> 
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> python compare_prefix_ctx_quick.py --ctx 10 --tol-lsb 2 --dir "D:/HOC_TAP/KLTN/My_Proj/Advance_ECG/Model in C++/gen_mem"
-========================================================================
-PREFIX CTX COMPARE | ctx=10 | Conv1D_6
-========================================================================
-CRAM      : 00ce0900
-RTL file  : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\output.txt
-Golden    : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\Golden_ctx10_Conv1D_6_hex.txt
-Length    : rtl=320 | golden=320 | compared=320 | missing=0
-Tol       : 2 LSB | fractional_bits=6
-------------------------------------------------------------------------
-STATUS    : PASS
-Mismatch  : exact=2 | over_tol=0 | within_tol=320/320
-MEA/MAE   : 0.009375 LSB | 0.000146484
-Signed ME : 0.003125 LSB | 0.000048828
-RMSE      : 0.125000 LSB | 0.001953125
-Max Abs   : 2 LSB | 0.031250000 | idx=158
-------------------------------------------------------------------------
-Vector stats: raw_i16 (float)
-RTL      min=   -177 ( -2.765625) | max=    238 (  3.718750) | mean=    52.069 (  0.813574) | zero=   2 | neg=  53
-Golden   min=   -177 ( -2.765625) | max=    238 (  3.718750) | mean=    52.066 (  0.813525) | zero=   2 | neg=  53
-========================================================================
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> 
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> python compare_prefix_ctx_quick.py --ctx 12 --tol-lsb 2 --dir "D:/HOC_TAP/KLTN/My_Proj/Advance_ECG/Model in C++/gen_mem"
-========================================================================
-PREFIX CTX COMPARE | ctx=12 | Conv1D_9
-========================================================================
-CRAM      : 80c32890
-RTL file  : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\output.txt
-Golden    : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\Golden_ctx12_Conv1D_9_hex.txt
-Length    : rtl=320 | golden=320 | compared=320 | missing=0
-Tol       : 2 LSB | fractional_bits=6
-------------------------------------------------------------------------
-STATUS    : PASS
-Mismatch  : exact=6 | over_tol=0 | within_tol=320/320
-MEA/MAE   : 0.025000 LSB | 0.000390625
-Signed ME : -0.012500 LSB | -0.000195313
-RMSE      : 0.193649 LSB | 0.003025768
-Max Abs   : 2 LSB | 0.031250000 | idx=156
-------------------------------------------------------------------------
-Vector stats: raw_i16 (float)
-RTL      min=      0 (  0.000000) | max=    262 (  4.093750) | mean=   110.950 (  1.733594) | zero=  19 | neg=   0
-Golden   min=      0 (  0.000000) | max=    264 (  4.125000) | mean=   110.963 (  1.733789) | zero=  19 | neg=   0
-========================================================================
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> 
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> python compare_prefix_ctx_quick.py --ctx 13 --tol-lsb 2 --dir "D:/HOC_TAP/KLTN/My_Proj/Advance_ECG/Model in C++/gen_mem"
-========================================================================
-PREFIX CTX COMPARE | ctx=13 | Conv1D_10
-========================================================================
-CRAM      : c0c3a898
-RTL file  : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\output.txt
-Golden    : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\Golden_ctx13_Conv1D_10_hex.txt
-Length    : rtl=320 | golden=320 | compared=320 | missing=0
-Tol       : 2 LSB | fractional_bits=6
-------------------------------------------------------------------------
-STATUS    : PASS
-Mismatch  : exact=0 | over_tol=0 | within_tol=320/320
-MEA/MAE   : 0.000000 LSB | 0.000000000
-Signed ME : 0.000000 LSB | 0.000000000
-RMSE      : 0.000000 LSB | 0.000000000
-Max Abs   : 0 LSB | 0.000000000 | idx=-1
-------------------------------------------------------------------------
-Vector stats: raw_i16 (float)
-RTL      min=      0 (  0.000000) | max=    384 (  6.000000) | mean=    15.287 (  0.238867) | zero= 170 | neg=   0
-Golden   min=      0 (  0.000000) | max=    384 (  6.000000) | mean=    15.287 (  0.238867) | zero= 170 | neg=   0
-========================================================================
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> 
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> python compare_prefix_ctx_quick.py --ctx 15 --tol-lsb 2 --dir "D:/HOC_TAP/KLTN/My_Proj/Advance_ECG/Model in C++/gen_mem"
-========================================================================
-PREFIX CTX COMPARE | ctx=15 | Conv1D_11
-========================================================================
-CRAM      : 4e4f2dc0
-RTL file  : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\output.txt
-Golden    : D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem\Golden_ctx15_Conv1D_11_hex.txt
-Length    : rtl=1280 | golden=1280 | compared=1280 | missing=0
-Tol       : 2 LSB | fractional_bits=6
-------------------------------------------------------------------------
-STATUS    : FAIL
-Mismatch  : exact=23 | over_tol=7 | within_tol=1273/1280
-MEA/MAE   : 0.035156 LSB | 0.000549316
-Signed ME : -0.019531 LSB | -0.000305176
-RMSE      : 0.294480 LSB | 0.004601257
-Max Abs   : 4 LSB | 0.062500000 | idx=159
-------------------------------------------------------------------------
-Vector stats: raw_i16 (float)
-RTL      min=      0 (  0.000000) | max=   1257 ( 19.640625) | mean=    75.957 (  1.186829) | zero= 735 | neg=   0
-Golden   min=      0 (  0.000000) | max=   1257 ( 19.640625) | mean=    75.977 (  1.187134) | zero= 735 | neg=   0
-------------------------------------------------------------------------
-First mismatches over tolerance:
-idx     rtl_hex golden_hex   rtl_i16 golden_i16   err_lsb   err_float
-159        0033       002f        51         47         4    0.062500
-318        033c       033f       828        831        -3   -0.046875
-479        005e       0061        94         97        -3   -0.046875
-638        0003       0006         3          6        -3   -0.046875
-639        0065       0069       101        105        -4   -0.062500
-958        0088       0085       136        133         3    0.046875
-1118       0058       005b        88         91        -3   -0.046875
-========================================================================
-PS D:\HOC_TAP\KLTN\My_Proj\Advance_ECG\Model in C++\gen_mem> 
+duy@BeagleBone:~/Huong/Dual_40PE$ ./main signal_HDH.txt label_HDH.txt 100 1
+=================================================
+   TINA Dual-PEA 40PE FPGA ECG Classification
+=================================================
+Board             : Xilinx Kria KV260 / PetaLinux
+Signals file      : signal_HDH.txt
+Labels file       : label_HDH.txt
+Num samples       : 100
+Clear LDM/sample  : 1
+Final output LDM  : bank=0 start_addr=0 length=1280
+PE_NUM            : 40
+CRAM/WRAM/BRAM    : 42 / 6096 / 196
+
+[1/5] Opening FPGA device...
+Opened device: /dev/uio4 (MY_IP
+)      FPGA opened successfully.
+
+[2/5] Loading memory/configuration files...
+  CRAM_File.txt          loaded: 42 values
+  WRAM_File.txt          loaded: 6096 values
+  BRAM_File.txt          loaded: 196 values
+  Dense weights          loaded: 160 values (WRAM_2_File.txt)
+  Dense biases           loaded: 5 values (BRAM_2_File.txt)
+
+      Writing CRAM/WRAM/BRAM to FPGA...
+      CRAM first=0x86C1ACC0 last=0x0EC01200
+
+[3/5] Loading dataset...
+      Signals loaded: 100 samples x 320 points
+      Labels loaded : 100 labels
+
+[4/5] Running inference on Dual-PEA 40PE accelerator...
+
+
+
+
+
+

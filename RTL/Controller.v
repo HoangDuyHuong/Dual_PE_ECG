@@ -56,6 +56,7 @@ module Controller
 	
 	///*** To All PEs ***///
 	output  wire 					              	En_out,
+	output  wire 					              	PE_En_out,
 	output  wire 					              	layer_done_out,
 	output  wire 					              	Parity_PE_Selection_out, //0 -> Even PEs, 1 -> Odd PEs
 	
@@ -105,6 +106,8 @@ module Controller
 	wire [`PE_NUM_BITS-1:0]  						PE_Incr_wr;
 	wire [`CTX_BITS-1:0]             				CTX_wr;
 	wire 					            			conv_en_wr;
+	wire                                            prefetch_needed_wr;
+	wire                                            prefetch_active_wr;
 	wire [`LDM_ADDR_BITS-1:0]						CTRL_LDM_addrb_wr;
 	
 	// *************** Register signals *************** //	
@@ -129,6 +132,7 @@ module Controller
 	reg 				          					MP_Padding_3_rg;
 	reg												Overarray_rg, Overarray_2_rg;
 	reg	[`PE_NUM-1:0]								CTRL_LDM_addra_Incr_rg;
+	reg [1:0]                                      prefetch_count_rg;
 	
 	localparam  									IDLE 		= 0;
 	localparam  									LOAD_CTX 	= 1; 
@@ -137,6 +141,7 @@ module Controller
 	//--------- To CRAM and CTX decoder ---------///
 	assign CTX_wr				= (STATE_rg == EXEC) ? CTX_in : 0;
 	assign En_out				= (STATE_rg == EXEC) ? 1'b1 : 0;
+	assign PE_En_out            = ((STATE_rg == EXEC) & ~prefetch_active_wr) ? 1'b1 : 1'b0;
 	assign load_ctx_wr			= (STATE_rg == LOAD_CTX) ? 1'b1:1'b0;
 	
 	assign CTRL_CRAM_addrb_out	= CTRL_CRAM_addrb_rg;
@@ -155,6 +160,8 @@ module Controller
 	assign starting_address_LDM_wr	= CTX_wr[`CTX_BITS-`PAD_BITS-`N_BITS-`Y_BITS-`J_BITS-`ALU_CFG_BITS-`STRIDE_BITS-`S_LDM_BITS-`D_LDM_BITS-1:`CTX_BITS-`PAD_BITS-`N_BITS-`Y_BITS-`K_BITS-`J_BITS-`ALU_CFG_BITS-`STRIDE_BITS-`S_LDM_BITS-`D_LDM_BITS-`SA_LDM_BITS];
 	
 	assign conv_en_wr			= (CFG_wr[`ALU_CFG_BITS-2:0] == `EXE_MAC) ? 1'b1 : 0;
+	assign prefetch_needed_wr = conv_en_wr & stride_wr & (pad_wr == 0);
+	assign prefetch_active_wr = (STATE_rg == EXEC) & prefetch_needed_wr & (prefetch_count_rg != 0);
 	
 	///--------- To Weight RAM (Dual-Port Logic via Data Interleaving) ---------///
 	wire [`WRAM_ADDR_BITS-1:0] base_wram_addr = CTRL_WRAM_addra_1_rg + CTRL_WRAM_addra_2_rg;
@@ -162,8 +169,8 @@ module Controller
 	assign CTRL_WRAM_addrb_0_out = base_wram_addr << 1;
 	assign CTRL_WRAM_addrb_1_out = (base_wram_addr << 1) + 1;
 	
-	assign CTRL_WRAM_enb_0_out	 = (STATE_rg == EXEC) ? conv_en_wr : 1'b0;
-	assign CTRL_WRAM_enb_1_out	 = (STATE_rg == EXEC) ? conv_en_wr : 1'b0;
+	assign CTRL_WRAM_enb_0_out	 = ((STATE_rg == EXEC) & ~prefetch_active_wr) ? conv_en_wr : 1'b0;
+	assign CTRL_WRAM_enb_1_out	 = ((STATE_rg == EXEC) & ~prefetch_active_wr) ? conv_en_wr : 1'b0;
 	assign CTRL_WRAM_web_0_out	 = 0;
 	assign CTRL_WRAM_web_1_out	 = 0;
 
@@ -171,8 +178,8 @@ module Controller
 	assign CTRL_BRAM_addrb_0_out = CTRL_BRAM_addra_rg << 1;
 	assign CTRL_BRAM_addrb_1_out = (CTRL_BRAM_addra_rg << 1) + 1;
 	
-	assign CTRL_BRAM_enb_0_out	 = ((STATE_rg == EXEC) & (j_count_rg == j_wr) & (k_count_rg == k_wr)) ? conv_en_wr : 1'b0;
-	assign CTRL_BRAM_enb_1_out	 = ((STATE_rg == EXEC) & (j_count_rg == j_wr) & (k_count_rg == k_wr)) ? conv_en_wr : 1'b0;
+	assign CTRL_BRAM_enb_0_out	 = ((STATE_rg == EXEC) & ~prefetch_active_wr & (j_count_rg == j_wr) & (k_count_rg == k_wr)) ? conv_en_wr : 1'b0;
+	assign CTRL_BRAM_enb_1_out	 = ((STATE_rg == EXEC) & ~prefetch_active_wr & (j_count_rg == j_wr) & (k_count_rg == k_wr)) ? conv_en_wr : 1'b0;
 	assign CTRL_BRAM_web_0_out	 = 0;
 	assign CTRL_BRAM_web_1_out	 = 0;
 	
@@ -278,6 +285,7 @@ module Controller
 			Overarray_rg			<= 0;
 			Overarray_2_rg			<= 0;
 			n_count_d1_rg <= 0; n_count_d2_rg <= 0; n_count_d3_rg <= 0; n_count_d4_rg <= 0;
+			prefetch_count_rg <= 0;
 		end
 		else begin
 			Overarray_2_rg			<= Overarray_rg;
@@ -301,6 +309,7 @@ module Controller
 				CTRL_BRAM_addra_rg			<= 0;
 				Overarray_rg				<= 0;
 				n_count_d1_rg <= 0; n_count_d2_rg <= 0; n_count_d3_rg <= 0; n_count_d4_rg <= 0;
+				prefetch_count_rg <= 0;
 			end	
 			else if(STATE_rg == LOAD_CTX) begin
 				n_count_rg	  				<= 0;
@@ -320,8 +329,25 @@ module Controller
 				CTRL_WRAM_addra_1_rg		<= 0;
 				Overarray_rg				<= 0;
 				n_count_d1_rg <= 0; n_count_d2_rg <= 0; n_count_d3_rg <= 0; n_count_d4_rg <= 0;
+				prefetch_count_rg <= 2'd2;
+			end
+			else if(prefetch_active_wr) begin
+				// Hold the first stride-MAC address phase so Pixel_1 path can fill before weights/ALU start.
+				prefetch_count_rg <= prefetch_count_rg - 1'b1;
+				j_count_2_rg      <= j_count_rg;
+				n_count_d1_rg     <= 0;
+				n_count_d2_rg     <= 0;
+				n_count_d3_rg     <= 0;
+				n_count_d4_rg     <= 0;
+				next_ctx_flg_1_rg <= 0;
+				next_ctx_flg_2_rg <= 0;
+				next_ctx_flg_3_rg <= 0;
+				next_ctx_flg_4_rg <= 0;
+				CTRL_LDM_addra_Incr_rg <= 0;
+				Overarray_rg      <= 0;
 			end
 			else begin
+				prefetch_count_rg        <= 0;
 				j_count_2_rg				<= j_count_rg;	
 				n_count_d1_rg <= n_count_rg;
 				n_count_d2_rg <= n_count_d1_rg;
@@ -442,5 +468,6 @@ module Controller
 			Padding_Read_rg = ~((40'd1 << Padding_Read_SEL_wr) - 1);
 		end
 	end
-	
+
+
 endmodule
