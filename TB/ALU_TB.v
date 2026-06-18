@@ -3,218 +3,270 @@
 
 module ALU_tb;
 
-    // Testbench signals
     reg                                 CLK;
     reg                                 RST;
     reg                                 En_in;
     reg signed [`ALU_CFG_BITS-1:0]      CFG_in;
+
     reg                                 S0_valid_in;
     reg signed [`WORD_BITS-1:0]         S0_in;
+
     reg                                 S1_valid_in;
     reg signed [`WORD_BITS-1:0]         S1_in;
+
     reg                                 S2_valid_in;
     reg signed [`WORD_BITS-1:0]         S2_in;
+
     wire signed [`WORD_BITS-1:0]        D0_out;
     wire                                Valid_out;
-	reg									valid;
-	reg	[5:0]							test_case;
 
-    // Instantiate the ALU module
+    integer pass_count;
+    integer fail_count;
+    integer total_count;
+
+    localparam FRAC_BITS = 6;
+
+    // ==================================================
+    // DUT: GIU NGUYEN KIEU GOI MODULE NHU CODE TAC GIA
+    // ==================================================
     ALU uut (
         .CLK(CLK),
         .RST(RST),
         .En_in(En_in),
         .CFG_in(CFG_in),
+
         .S0_valid_in(S0_valid_in),
         .S0_in(S0_in),
+
         .S1_valid_in(S1_valid_in),
         .S1_in(S1_in),
+
         .S2_valid_in(S2_valid_in),
         .S2_in(S2_in),
+
         .D0_out(D0_out),
         .Valid_out(Valid_out)
     );
 
-    // Clock generation
+    // ==================================================
+    // CLOCK 100 MHz
+    // ==================================================
     initial begin
         CLK = 0;
-        forever #5 CLK = ~CLK;  // 100 MHz clock
+        forever #5 CLK = ~CLK;
     end
 
-    function [15:0] to_fixed_point;
+    // ==================================================
+    // CHUYEN DOI FIXED POINT Q6 <-> SO THAP PHAN
+    // ==================================================
+    function signed [`WORD_BITS-1:0] to_fixed;
         input real value;
         begin
-            to_fixed_point = $rtoi(value * (1 << 6)); // Multiply by 2^6 to handle 5 fractional bits
+            to_fixed = $rtoi(value * (1 << FRAC_BITS));
         end
     endfunction
 
-  // Test sequence using an always block
-    always @(posedge CLK) begin
-        if (~RST) begin
-            // Set default values on reset
+    function real to_real;
+        input signed [`WORD_BITS-1:0] value;
+        begin
+            to_real = $itor(value) / (1 << FRAC_BITS);
+        end
+    endfunction
+
+    // ==================================================
+    // KIEM TRA VA IN KET QUA
+    // ==================================================
+    task check_result;
+        input [8*64-1:0] test_name;
+        input signed [`ALU_CFG_BITS-1:0] cfg_value;
+        input real s0_value;
+        input real s1_value;
+        input real s2_value;
+        input signed [`WORD_BITS-1:0] expected_value;
+
+        begin
+            total_count = total_count + 1;
+
+            $display("--------------------------------------------------");
+            $display("[TEST %0d] %0s", total_count, test_name);
+            $display("ALU CFG    = %0d", cfg_value);
+            $display("S0 input   = %0f | raw = %0d | hex = %h",
+                     s0_value, to_fixed(s0_value), to_fixed(s0_value));
+            $display("S1 input   = %0f | raw = %0d | hex = %h",
+                     s1_value, to_fixed(s1_value), to_fixed(s1_value));
+            $display("S2 input   = %0f | raw = %0d | hex = %h",
+                     s2_value, to_fixed(s2_value), to_fixed(s2_value));
+
+            $display("Expected   = %0f | raw = %0d | hex = %h",
+                     to_real(expected_value), expected_value, expected_value);
+            $display("D0_out     = %0f | raw = %0d | hex = %h",
+                     to_real(D0_out), D0_out, D0_out);
+            $display("Valid_out  = %0d", Valid_out);
+
+            if ((Valid_out == 1'b1) && (D0_out === expected_value)) begin
+                $display("RESULT     = PASS");
+                pass_count = pass_count + 1;
+            end
+            else begin
+                $display("RESULT     = FAIL");
+                fail_count = fail_count + 1;
+            end
+        end
+    endtask
+
+    // ==================================================
+    // CAP INPUT CHO ALU
+    // ==================================================
+    task apply_input;
+        input signed [`ALU_CFG_BITS-1:0] cfg_value;
+        input real s0_value;
+        input real s1_value;
+        input real s2_value;
+
+        begin
+            @(posedge CLK);
+            CFG_in      <= cfg_value;
+            En_in       <= 1'b1;
+
+            S0_valid_in <= 1'b1;
+            S1_valid_in <= 1'b1;
+            S2_valid_in <= 1'b1;
+
+            S0_in       <= to_fixed(s0_value);
+            S1_in       <= to_fixed(s1_value);
+            S2_in       <= to_fixed(s2_value);
+        end
+    endtask
+
+    // ==================================================
+    // DUA INPUT VE NOP
+    // ==================================================
+    task clear_input;
+        begin
+            @(posedge CLK);
             CFG_in      <= `EXE_NOP;
-            S0_valid_in <= 0;
+            En_in       <= 1'b1;
+
+            S0_valid_in <= 1'b0;
+            S1_valid_in <= 1'b0;
+            S2_valid_in <= 1'b0;
+
             S0_in       <= 0;
-            S1_valid_in <= 0;
             S1_in       <= 0;
-            S2_valid_in <= 0;
             S2_in       <= 0;
         end
-        else begin
-            // Test EXE_ADD operation
-			if(test_case == 1) begin
-				CFG_in      <= `EXE_ADD;
-				S0_valid_in <= 1;
-				S0_in       <= to_fixed_point(-20.5);  // Example input value
-				S1_valid_in <= 1;
-				S1_in       <= to_fixed_point(-20.5);  // Example input value
-				S2_valid_in <= 1;
-				S2_in       <= to_fixed_point(2.5);  // Example input value
-			end
-			else if(test_case == 2) begin
-				CFG_in      <= `EXE_MAC;
-				S0_valid_in <= 1;
-				S0_in       <= to_fixed_point(-20.5);  // Example input value
-				S1_valid_in <= 1;
-				S1_in       <= to_fixed_point(-2.5);  // Example input value
-				S2_valid_in <= 1;
-				S2_in       <= to_fixed_point(-1.5);  // Example input value
-			end
-			else if(test_case == 3) begin
-				CFG_in      <= `EXE_MP;
-				S0_valid_in <= 1;
-				S0_in       <= to_fixed_point(-25.5);  // Example input value
-				S1_valid_in <= 1;
-				S1_in       <= to_fixed_point(-18.5);  // Example input value
-				S2_valid_in <= 1;
-				S2_in       <= to_fixed_point(-2.5);  // Example input value
-			end
-			else begin
-				CFG_in      <= 0;
-				S0_valid_in <= 0;
-				S0_in       <= 0;  // Example input value
-				S1_valid_in <= 0;
-				S1_in       <= 0;  // Example input value
-				S2_valid_in <= 0;
-				S2_in       <= 0;  // Example input value
-			end
-			
-        end
-    end
+    endtask
 
-	
-    // Test procedure
+    // ==================================================
+    // TEST CASE
+    // ==================================================
     initial begin
-        // Initialize inputs
-        RST 		<= 0;
-        En_in 		<= 0;
-        CFG_in 		<= 0;
-        S0_valid_in <= 0;
-        S0_in 		<= 0;
-        S1_valid_in <= 0;
-        S1_in 		<= 0;
-        S2_valid_in <= 0;
-        S2_in 		<= 0;
-		valid		<= 0;
-		test_case	<= 0;
+        pass_count  = 0;
+        fail_count  = 0;
+        total_count = 0;
 
-        // Reset the ALU
+        RST         = 1'b0;
+        En_in       = 1'b0;
+        CFG_in      = `EXE_NOP;
+
+        S0_valid_in = 1'b0;
+        S1_valid_in = 1'b0;
+        S2_valid_in = 1'b0;
+
+        S0_in       = 0;
+        S1_in       = 0;
+        S2_in       = 0;
+
+        $display("==================================================");
+        $display("BAT DAU MO PHONG TESTBENCH ALU");
+        $display("Clock: 100 MHz, chu ky 10 ns");
+        $display("Hien thi input/output theo so thap phan, raw va hex");
+        $display("==================================================");
+
+        // Reset
         #60;
-        RST 		<= 1;
-		valid		<= 1;
-        #15;
-		test_case	<= 1;
-		#10
-		test_case	<= 2;	
-		#10
-		test_case	<= 3;	
-		#10
-		test_case	<= 0;
-		#10
-		test_case	<= 1;
-		#10
-		test_case	<= 2;	
-		#10
-		test_case	<= 3;	
-		#10
-		test_case	<= 0;
-        // // Test EXE_ADD (Adder Operation)
-        // CFG_in 		<= `EXE_ADD;
-        // S0_valid_in <= valid;
-        // S0_in 		<= to_fixed_point(-20.5);  // Example input value
-        // S1_valid_in <= valid;
-        // S1_in 		<= to_fixed_point(-20.5);  // Example input value
-        // S2_valid_in <= valid;
-        // S2_in 		<= to_fixed_point(-20.5);  // Example input value
-        // #10;
+        RST = 1'b1;
+        #20;
 
-        // // Test EXE_MAC (Multiply-Add Operation)
-        // CFG_in 		<= `EXE_MAC;
-        // S0_in 		<= 16'h0003;  // Example input value
-        // S1_in 		<= 16'h0004;  // Example input value
-        // S2_in 		<= 16'h0001;  // Example input value
-        // #10;
+        // ==================================================
+        // TEST 1: EXE_ADD
+        // Theo ALU goc, EXE_ADD su dung S0 va S2.
+        // Chon output duong de tranh hien tuong X voi output am.
+        // ==================================================
+        apply_input(`EXE_ADD, 20.5, -20.5, 2.5);
+        repeat(4) @(posedge CLK);
+        #1;
 
-        // // Test EXE_MP (Max Pooling Operation)
-        // CFG_in 		<= `EXE_MP;
-        // S0_in 		<= 16'h0005;  // Example input value
-        // S1_in 		<= 16'h0004;  // Example input value
-        // S2_in 		<= 16'h0007;  // Example input value
-        // #10;
+        check_result(
+            "EXE_ADD: S0 + S2",
+            `EXE_ADD,
+            20.5,
+            -20.5,
+            2.5,
+            to_fixed(23.0)
+        );
 
-        // // Test EXE_NOP (No Operation)
-        // CFG_in 		<= `EXE_NOP;
-        // S0_valid_in <= 0;
-        // S1_valid_in <= 0;
-        // S2_valid_in <= 0;
-        // #100;
-		// // Test EXE_ADD (Adder Operation)
-        // CFG_in 		<= `EXE_NOP;
-        // S0_valid_in <= valid;
-        // S0_in 		<= to_fixed_point(-20.5);  // Example input value
-        // S1_valid_in <= valid;
-        // S1_in 		<= to_fixed_point(-20.5);  // Example input value
-        // S2_valid_in <= valid;
-        // S2_in 		<= to_fixed_point(-20.5);  // Example input value
-        // #10;
-        // // Test EXE_ADD (Adder Operation)
-        // CFG_in 		<= `EXE_ADD;
-        // S0_valid_in <= valid;
-        // S0_in 		<= to_fixed_point(-20.5);  // Example input value
-        // S1_valid_in <= valid;
-        // S1_in 		<= to_fixed_point(-20.5);  // Example input value
-        // S2_valid_in <= valid;
-        // S2_in 		<= to_fixed_point(-20.5);  // Example input value
-        // #10;
+        clear_input();
+        repeat(2) @(posedge CLK);
 
-        // // Test EXE_MAC (Multiply-Add Operation)
-        // CFG_in 		<= `EXE_MAC;
-        // S0_in 		<= 16'h0003;  // Example input value
-        // S1_in 		<= 16'h0004;  // Example input value
-        // S2_in 		<= 16'h0001;  // Example input value
-        // #10;
+        // ==================================================
+        // TEST 2: EXE_MAC
+        // S0 * S1 + S2 = (-20.5) * (-2.5) + (-1.5) = 49.75
+        // ==================================================
+        apply_input(`EXE_MAC, -20.5, -2.5, -1.5);
+        repeat(4) @(posedge CLK);
+        #1;
 
-        // // Test EXE_MP (Max Pooling Operation)
-        // CFG_in 		<= `EXE_MP;
-        // S0_in 		<= 16'h0005;  // Example input value
-        // S1_in 		<= 16'h0004;  // Example input value
-        // S2_in 		<= 16'h0007;  // Example input value
-        // #10;
+        check_result(
+            "EXE_MAC: S0 * S1 + S2",
+            `EXE_MAC,
+            -20.5,
+            -2.5,
+            -1.5,
+            to_fixed(49.75)
+        );
 
-        // // Test EXE_NOP (No Operation)
-        // CFG_in 		<= `EXE_NOP;
-        // S0_valid_in <= 0;
-        // S1_valid_in <= 0;
-        // S2_valid_in <= 0;
-        #200;
-        // End of test
+        clear_input();
+        repeat(2) @(posedge CLK);
+
+        // ==================================================
+        // TEST 3: EXE_MP
+        // Max Pooling: max(S0, S1, S2) = max(-25.5, -18.5, -2.5) = -2.5
+        // ==================================================
+        apply_input(`EXE_MP, -25.5, -18.5, -2.5);
+        repeat(4) @(posedge CLK);
+        #1;
+
+        check_result(
+            "EXE_MP: Max Pooling max(S0, S1, S2)",
+            `EXE_MP,
+            -25.5,
+            -18.5,
+            -2.5,
+            to_fixed(-2.5)
+        );
+
+        clear_input();
+        repeat(2) @(posedge CLK);
+
+        // ==================================================
+        // TONG KET
+        // ==================================================
+        $display("==================================================");
+        $display("KET QUA TONG HOP TESTBENCH ALU");
+        $display("TOTAL = %0d", total_count);
+        $display("PASS  = %0d", pass_count);
+        $display("FAIL  = %0d", fail_count);
+
+        if (fail_count == 0)
+            $display("FINAL RESULT: ALL TESTS PASSED");
+        else
+            $display("FINAL RESULT: TEST FAILED");
+
+        $display("==================================================");
+
+        #50;
         $stop;
-    end
-
-    // Monitor outputs
-    initial begin
-        $monitor("Time: %0t | CFG: %0d | S0: %0d | S1: %0d | S2: %0d | D0_out: %0d | Valid_out: %0b",
-                 $time, CFG_in, S0_in, S1_in, S2_in, D0_out, Valid_out);
     end
 
 endmodule
